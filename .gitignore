@@ -1,0 +1,5 @@
+bin/
+obj/
+Release/
+*.user
+.vs/
