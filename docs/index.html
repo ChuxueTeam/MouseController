@@ -3,57 +3,144 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MouseController · 键盘驱动的鼠标控制与连点器</title>
+<title>MouseController · 鼠标控制与连点器</title>
 <style>
+  /* ========== Material Design 3 tokens ========== */
   :root {
-    --bg: #f7f8fa; --card: #ffffff; --text: #22304a; --muted: #6b7688;
-    --accent: #4f8cff; --accent-dark: #3a76e8; --border: #e5e9f0;
+    --primary: #6750a4;
+    --on-primary: #ffffff;
+    --primary-container: #eaddff;
+    --on-primary-container: #21005d;
+    --secondary-container: #e8def8;
+    --on-secondary-container: #1d192b;
+    --surface: #fef7ff;
+    --surface-dim: #ded8e1;
+    --surface-container: #f3edf7;
+    --surface-container-high: #ece6f0;
+    --on-surface: #1d1b20;
+    --on-surface-variant: #49454f;
+    --outline: #79747e;
+    --outline-variant: #cac4d0;
+    --inverse-surface: #322f35;
+    --inverse-on-surface: #f5eff7;
+    --shadow: rgba(0,0,0,.18);
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #d0bcff;
+      --on-primary: #381e72;
+      --primary-container: #4f378b;
+      --on-primary-container: #eaddff;
+      --secondary-container: #4a4458;
+      --on-secondary-container: #e8def8;
+      --surface: #141218;
+      --surface-container: #211f26;
+      --surface-container-high: #2b2930;
+      --on-surface: #e6e0e9;
+      --on-surface-variant: #cac4d0;
+      --outline: #938f99;
+      --outline-variant: #49454f;
+    }
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: "Segoe UI", "Microsoft YaHei UI", -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+  body {
+    font-family: "Segoe UI", "Microsoft YaHei UI", "Noto Sans SC", sans-serif;
+    background: var(--surface); color: var(--on-surface);
+    line-height: 1.65; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 20px; }
 
-  header { padding: 64px 0 48px; text-align: center; }
-  .logo { font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
-  h1 { font-size: 44px; font-weight: 700; letter-spacing: -0.5px; }
-  .tagline { color: var(--muted); font-size: 18px; margin: 14px 0 8px; }
-  .tagline-en { color: var(--muted); font-size: 14px; }
-  .cta { margin-top: 30px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-  .btn { padding: 12px 28px; border-radius: 10px; font-size: 16px; font-weight: 600; text-decoration: none; transition: .15s; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: var(--accent-dark); }
-  .btn-ghost { border: 1.5px solid var(--border); color: var(--text); background: var(--card); }
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-  .badge { font-size: 13px; color: var(--muted); margin-top: 16px; }
+  /* ---------- Hero ---------- */
+  header { padding: 72px 0 56px; text-align: center; }
+  .app-icon {
+    width: 72px; height: 72px; margin: 0 auto 20px;
+    background: var(--primary-container); border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  h1 {
+    font-size: 46px; font-weight: 500; letter-spacing: -0.5px; line-height: 1.2;
+  }
+  .tagline { font-size: 19px; color: var(--on-surface-variant); margin-top: 12px; }
+  .tagline-en { font-size: 15px; color: var(--on-surface-variant); opacity: .75; margin-top: 4px; }
+  .cta { margin-top: 32px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-  section { padding: 28px 0; }
-  h2 { font-size: 24px; margin-bottom: 20px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
-  .card h3 { font-size: 16px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-  .card p { color: var(--muted); font-size: 14px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 26px; border-radius: 999px;
+    font-size: 16px; font-weight: 500; text-decoration: none;
+    transition: background .15s, box-shadow .15s;
+  }
+  .btn-filled { background: var(--primary); color: var(--on-primary); }
+  .btn-filled:hover { box-shadow: 0 1px 3px var(--shadow), 0 4px 8px rgba(0,0,0,.12); }
+  .btn-tonal { background: var(--secondary-container); color: var(--on-secondary-container); }
+  .btn-tonal:hover { box-shadow: 0 1px 3px var(--shadow); }
+  .badge { font-size: 13px; color: var(--on-surface-variant); margin-top: 22px; }
 
-  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; font-size: 14px; }
-  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
-  th { background: #f0f3f8; font-weight: 600; }
-  tr:last-child td { border-bottom: none; }
-  code { background: #eef2f8; padding: 2px 7px; border-radius: 6px; font-size: 13px; font-family: Consolas, monospace; }
+  /* ---------- Sections ---------- */
+  section { padding: 26px 0; }
+  h2 { font-size: 26px; font-weight: 500; margin-bottom: 6px; }
+  .sec-sub { color: var(--on-surface-variant); font-size: 14px; margin-bottom: 22px; }
 
-  footer { padding: 36px 0 48px; text-align: center; color: var(--muted); font-size: 13px; }
-  footer a { color: var(--accent); text-decoration: none; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+  .card {
+    background: var(--surface-container); border-radius: 16px;
+    padding: 22px; transition: background .15s;
+  }
+  .card:hover { background: var(--surface-container-high); }
+  .icon-chip {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: var(--primary-container); color: var(--on-primary-container);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+  }
+  .card h3 { font-size: 16px; font-weight: 600; }
+  .card .en { display: block; font-size: 12.5px; color: var(--on-surface-variant); margin-top: 2px; }
+  .card p { font-size: 14px; color: var(--on-surface-variant); margin-top: 8px; }
+
+  /* ---------- Table ---------- */
+  .tbl-wrap {
+    background: var(--surface-container-low, var(--surface-container));
+    border: 1px solid var(--outline-variant); border-radius: 16px; overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 13px 18px; border-bottom: 1px solid var(--outline-variant); }
+  thead th { color: var(--on-surface-variant); font-weight: 500; font-size: 12.5px; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-container-high); }
+  code {
+    background: var(--surface-container-high); padding: 3px 9px;
+    border-radius: 8px; font-size: 13px; font-family: Consolas, "Cascadia Mono", monospace;
+  }
+  .size { white-space: nowrap; }
+
+  /* ---------- Footer ---------- */
+  footer { padding: 44px 0 56px; text-align: center; font-size: 13px; color: var(--on-surface-variant); }
+  footer a { color: var(--primary); text-decoration: none; }
+
+  @media (max-width: 640px) {
+    h1 { font-size: 34px; }
+    .th-hide { display: none; }
+  }
 </style>
 </head>
 <body>
 
 <header>
   <div class="wrap">
-    <div class="logo">Open Source · Windows</div>
+    <div class="app-icon">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="8" y="3" width="8" height="18" rx="4"/><path d="M12 3v4"/>
+      </svg>
+    </div>
     <h1>MouseController</h1>
     <p class="tagline">键盘驱动的全局鼠标控制与连点器</p>
     <p class="tagline-en">Keyboard-driven mouse controller &amp; auto-clicker for Windows</p>
     <div class="cta">
-      <a class="btn btn-primary" href="https://github.com/ChuxueTeam/MouseController/releases/latest">下载最新版 · Download</a>
-      <a class="btn btn-ghost" href="https://github.com/ChuxueTeam/MouseController">查看源码 · Source</a>
+      <a class="btn btn-filled" href="https://github.com/ChuxueTeam/MouseController/releases/latest">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5"/><path d="M4 19h16"/></svg>
+        下载 · Download
+      </a>
+      <a class="btn btn-tonal" href="https://github.com/ChuxueTeam/MouseController">查看源码 · Source</a>
     </div>
     <p class="badge">单文件 · 免安装 · Windows 原生 API · MIT License</p>
   </div>
@@ -61,42 +148,77 @@
 
 <section>
   <div class="wrap">
-    <h2>功能特性 · Features</h2>
+    <h2>功能特性</h2>
+    <p class="sec-sub">Features</p>
     <div class="grid">
-      <div class="card"><h3>🖱️ 四档步长移动</h3><p>Alt 系组合键 + 方向键，四档步长可调，按住连续移动，避开系统与输入法冲突。</p></div>
-      <div class="card"><h3>👆 模拟点击</h3><p>Ctrl+Alt+1 / 2 / 3 一键模拟左键、中键、右键点击。</p></div>
-      <div class="card"><h3>🎯 连点器</h3><p>次数、间隔、键位全可设，Ctrl+Alt+4 一键启停，间隔 0 极速模式。</p></div>
-      <div class="card"><h3>📐 坐标显示与定点移动</h3><p>鼠标坐标实时显示，输入坐标一键跳转，取当前坐标快速填入。</p></div>
-      <div class="card"><h3>🗂️ 托盘常驻</h3><p>关窗口收进托盘，Ctrl+M 随时呼出，单实例运行不重复。</p></div>
-      <div class="card"><h3>💾 设置持久化</h3><p>步长、连点器参数自动保存，重启不丢，轻量 JSON 存储。</p></div>
+      <div class="card">
+        <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9L12 3l5 6"/><path d="M12 3v14"/><path d="M7 21l5-4 5 4"/></svg></div>
+        <h3>四档步长移动<span class="en">4-step movement</span></h3>
+        <p>Alt 系组合键 + 方向键，四档步长可调，按住连续移动，避开系统与输入法冲突。</p>
+      </div>
+      <div class="card">
+        <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 7-6.5 2L10 19z"/></svg></div>
+        <h3>三键模拟点击<span class="en">Simulated clicks</span></h3>
+        <p>Ctrl+Alt+1 / 2 / 3 一键模拟左键、中键、右键点击，全走 SendInput。</p>
+      </div>
+      <div class="card">
+        <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <h3>连点器<span class="en">Auto-clicker</span></h3>
+        <p>次数、间隔、键位全可设，Ctrl+Alt+4 一键启停，间隔 0 极速模式。</p>
+      </div>
+      <div class="card">
+        <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v14h16"/><path d="M4 13l5-5 4 4 6-7"/></svg></div>
+        <h3>坐标与定点移动<span class="en">Coordinates &amp; jump</span></h3>
+        <p>鼠标坐标实时显示，输入坐标一键跳转，取当前坐标快速填入。</p>
+      </div>
+      <div class="card">
+        <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l4-4 5 5 5-5 4 4v5H3z"/></svg></div>
+        <h3>托盘常驻<span class="en">Tray-resident</span></h3>
+        <p>关窗口收进托盘，Ctrl+M 随时呼出，单实例运行不重复。</p>
+      </div>
+      <div class="card">
+        <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10"/><circle cx="17" cy="6" r="2"/><path d="M4 12h4"/><circle cx="11" cy="12" r="2"/><path d="M4 18h10"/><circle cx="17" cy="18" r="2"/></svg></div>
+        <h3>设置持久化<span class="en">Settings persisted</span></h3>
+        <p>步长、连点器参数自动保存，重启不丢，轻量 JSON 存储。</p>
+      </div>
     </div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <h2>快捷键 · Hotkeys</h2>
-    <table>
-      <tr><th>功能</th><th>快捷键</th><th>功能</th><th>快捷键</th></tr>
-      <tr><td>大幅移动</td><td><code>Alt+方向键</code></td><td>左键点击</td><td><code>Ctrl+Alt+1</code></td></tr>
-      <tr><td>中幅移动</td><td><code>Shift+Alt+方向键</code></td><td>中键点击</td><td><code>Ctrl+Alt+2</code></td></tr>
-      <tr><td>小幅移动</td><td><code>Ctrl+Alt+方向键</code></td><td>右键点击</td><td><code>Ctrl+Alt+3</code></td></tr>
-      <tr><td>微小移动</td><td><code>Ctrl+Shift+Alt+方向键</code></td><td>连点器启停</td><td><code>Ctrl+Alt+4</code></td></tr>
-      <tr><td>呼出主界面</td><td><code>Ctrl+M</code></td><td>退出程序</td><td><code>Ctrl+Alt+Q</code></td></tr>
-    </table>
+    <h2>快捷键</h2>
+    <p class="sec-sub">Hotkeys</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>功能</th><th>快捷键</th><th class="th-hide">功能</th><th class="th-hide">快捷键</th></tr></thead>
+        <tbody>
+          <tr><td>大幅移动</td><td><code>Alt+方向键</code></td><td class="th-hide">左键点击</td><td class="th-hide"><code>Ctrl+Alt+1</code></td></tr>
+          <tr><td>中幅移动</td><td><code>Shift+Alt+方向键</code></td><td class="th-hide">中键点击</td><td class="th-hide"><code>Ctrl+Alt+2</code></td></tr>
+          <tr><td>小幅移动</td><td><code>Ctrl+Alt+方向键</code></td><td class="th-hide">右键点击</td><td class="th-hide"><code>Ctrl+Alt+3</code></td></tr>
+          <tr><td>微小移动</td><td><code>Ctrl+Shift+Alt+方向键</code></td><td class="th-hide">连点器启停</td><td class="th-hide"><code>Ctrl+Alt+4</code></td></tr>
+          <tr><td>呼出主界面</td><td><code>Ctrl+M</code></td><td class="th-hide">退出程序</td><td class="th-hide"><code>Ctrl+Alt+Q</code></td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <h2>下载 · Downloads</h2>
-    <table>
-      <tr><th>文件</th><th>环境</th><th>大小</th></tr>
-      <tr><td>MouseController-pe-x64.exe</td><td>64 位 PE / 无运行时环境（自包含）</td><td>~46 MB</td></tr>
-      <tr><td>MouseController-pe-x86.exe</td><td>32 位 PE / 无运行时环境（自包含）</td><td>~42 MB</td></tr>
-      <tr><td>MouseController-x64.exe</td><td>64 位 Windows（需 .NET 9 桌面运行时）</td><td>~172 KB</td></tr>
-      <tr><td>MouseController-x86.exe</td><td>32 位 Windows（需 .NET 9 桌面运行时）</td><td>~145 KB</td></tr>
-    </table>
+    <h2>下载</h2>
+    <p class="sec-sub">Downloads</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>文件</th><th>适用环境</th><th>大小</th></tr></thead>
+        <tbody>
+          <tr><td>MouseController-pe-x64.exe</td><td>64 位 PE / 无运行时（自包含）</td><td class="size">~46 MB</td></tr>
+          <tr><td>MouseController-pe-x86.exe</td><td>32 位 PE / 无运行时（自包含）</td><td class="size">~42 MB</td></tr>
+          <tr><td>MouseController-x64.exe</td><td>64 位 Windows（需 .NET 9 运行时）</td><td class="size">~172 KB</td></tr>
+          <tr><td>MouseController-x86.exe</td><td>32 位 Windows（需 .NET 9 运行时）</td><td class="size">~145 KB</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </section>
 
