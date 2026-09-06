@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MouseController · 键盘驱动的鼠标控制与连点器</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --card: #ffffff; --text: #22304a; --muted: #6b7688;
+    --accent: #4f8cff; --accent-dark: #3a76e8; --border: #e5e9f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Segoe UI", "Microsoft YaHei UI", -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+  header { padding: 64px 0 48px; text-align: center; }
+  .logo { font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+  h1 { font-size: 44px; font-weight: 700; letter-spacing: -0.5px; }
+  .tagline { color: var(--muted); font-size: 18px; margin: 14px 0 8px; }
+  .tagline-en { color: var(--muted); font-size: 14px; }
+  .cta { margin-top: 30px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn { padding: 12px 28px; border-radius: 10px; font-size: 16px; font-weight: 600; text-decoration: none; transition: .15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-ghost { border: 1.5px solid var(--border); color: var(--text); background: var(--card); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .badge { font-size: 13px; color: var(--muted); margin-top: 16px; }
+
+  section { padding: 28px 0; }
+  h2 { font-size: 24px; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
+  .card h3 { font-size: 16px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .card p { color: var(--muted); font-size: 14px; }
+
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; font-size: 14px; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: #f0f3f8; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  code { background: #eef2f8; padding: 2px 7px; border-radius: 6px; font-size: 13px; font-family: Consolas, monospace; }
+
+  footer { padding: 36px 0 48px; text-align: center; color: var(--muted); font-size: 13px; }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo">Open Source · Windows</div>
+    <h1>MouseController</h1>
+    <p class="tagline">键盘驱动的全局鼠标控制与连点器</p>
+    <p class="tagline-en">Keyboard-driven mouse controller &amp; auto-clicker for Windows</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/ChuxueTeam/MouseController/releases/latest">下载最新版 · Download</a>
+      <a class="btn btn-ghost" href="https://github.com/ChuxueTeam/MouseController">查看源码 · Source</a>
+    </div>
+    <p class="badge">单文件 · 免安装 · Windows 原生 API · MIT License</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>功能特性 · Features</h2>
+    <div class="grid">
+      <div class="card"><h3>🖱️ 四档步长移动</h3><p>Alt 系组合键 + 方向键，四档步长可调，按住连续移动，避开系统与输入法冲突。</p></div>
+      <div class="card"><h3>👆 模拟点击</h3><p>Ctrl+Alt+1 / 2 / 3 一键模拟左键、中键、右键点击。</p></div>
+      <div class="card"><h3>🎯 连点器</h3><p>次数、间隔、键位全可设，Ctrl+Alt+4 一键启停，间隔 0 极速模式。</p></div>
+      <div class="card"><h3>📐 坐标显示与定点移动</h3><p>鼠标坐标实时显示，输入坐标一键跳转，取当前坐标快速填入。</p></div>
+      <div class="card"><h3>🗂️ 托盘常驻</h3><p>关窗口收进托盘，Ctrl+M 随时呼出，单实例运行不重复。</p></div>
+      <div class="card"><h3>💾 设置持久化</h3><p>步长、连点器参数自动保存，重启不丢，轻量 JSON 存储。</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>快捷键 · Hotkeys</h2>
+    <table>
+      <tr><th>功能</th><th>快捷键</th><th>功能</th><th>快捷键</th></tr>
+      <tr><td>大幅移动</td><td><code>Alt+方向键</code></td><td>左键点击</td><td><code>Ctrl+Alt+1</code></td></tr>
+      <tr><td>中幅移动</td><td><code>Shift+Alt+方向键</code></td><td>中键点击</td><td><code>Ctrl+Alt+2</code></td></tr>
+      <tr><td>小幅移动</td><td><code>Ctrl+Alt+方向键</code></td><td>右键点击</td><td><code>Ctrl+Alt+3</code></td></tr>
+      <tr><td>微小移动</td><td><code>Ctrl+Shift+Alt+方向键</code></td><td>连点器启停</td><td><code>Ctrl+Alt+4</code></td></tr>
+      <tr><td>呼出主界面</td><td><code>Ctrl+M</code></td><td>退出程序</td><td><code>Ctrl+Alt+Q</code></td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>下载 · Downloads</h2>
+    <table>
+      <tr><th>文件</th><th>环境</th><th>大小</th></tr>
+      <tr><td>MouseController-pe-x64.exe</td><td>64 位 PE / 无运行时环境（自包含）</td><td>~46 MB</td></tr>
+      <tr><td>MouseController-pe-x86.exe</td><td>32 位 PE / 无运行时环境（自包含）</td><td>~42 MB</td></tr>
+      <tr><td>MouseController-x64.exe</td><td>64 位 Windows（需 .NET 9 桌面运行时）</td><td>~172 KB</td></tr>
+      <tr><td>MouseController-x86.exe</td><td>32 位 Windows（需 .NET 9 桌面运行时）</td><td>~145 KB</td></tr>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>MouseController · Built with .NET 9 + WinForms · <a href="https://github.com/ChuxueTeam/MouseController/blob/main/LICENSE">MIT License</a> · © 2026 ChuxueTeam</p>
+  </div>
+</footer>
+
+</body>
+</html>
