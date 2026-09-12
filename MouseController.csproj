@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>MouseController</AssemblyName>
     <RootNamespace>MouseController</RootNamespace>
+    <Version>1.0.1</Version>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 

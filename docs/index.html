@@ -261,7 +261,7 @@
     <div class="wrap">
       <a class="announce" href="https://github.com/ChuxueTeam/MouseController/releases/latest">
         <span class="confetti" aria-hidden="true">🎉</span>
-        <span data-zh="v1.0.0 已发布 · 支持 PE 免依赖运行" data-en="v1.0.0 released · runs on WinPE, no dependencies">v1.0.0 已发布 · 支持 PE 免依赖运行</span> →
+        <span data-zh="v1.0.1 已发布 · 新增设置与关于" data-en="v1.0.1 released · Settings &amp; About added">v1.0.1 已发布 · 新增设置与关于</span> →
       </a>
       <div class="app-icon">
         <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -318,14 +318,23 @@
           <h3 data-zh="设置持久化" data-en="Settings persisted">设置持久化</h3>
           <p data-zh="步长、连点器参数自动保存，重启不丢，轻量 JSON 存储。" data-en="Step sizes and clicker settings are saved automatically in a lightweight JSON file.">步长、连点器参数自动保存，重启不丢，轻量 JSON 存储。</p>
         </div>
+        <div class="card">
+          <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg></div>
+          <h3 data-zh="自定义快捷键" data-en="Customizable hotkeys">自定义快捷键</h3>
+          <p data-zh="软件内「设置」可改任意快捷键组合，自动检测冲突，一键恢复默认。" data-en="Rebind any hotkey in Settings, with conflict detection and one-click restore to defaults.">软件内「设置」可改任意快捷键组合，自动检测冲突，一键恢复默认。</p>
+        </div>
+        <div class="card">
+          <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L10 4h1l6 16"/><path d="M6.5 14h8"/></svg></div>
+          <h3 data-zh="更换界面字体" data-en="Custom UI font">更换界面字体</h3>
+          <p data-zh="字体族与字号均可更换，实时预览，选择随程序保存。" data-en="Pick any installed font family and size with live preview; the choice is saved.">字体族与字号均可更换，实时预览，选择随程序保存。</p>
+        </div>
       </div>
     </div>
   </section>
-
-  <!-- ===== 快捷键 ===== -->
   <section>
     <div class="wrap">
       <h2 data-zh="快捷键" data-en="Hotkeys">快捷键</h2>
+      <p class="sec-sub" data-zh="以下为默认快捷键，均可在软件「设置」中自定义。" data-en="Defaults shown; every hotkey can be rebound in Settings.">以下为默认快捷键，均可在软件「设置」中自定义。</p>
       <div class="tbl-wrap">
         <table>
           <thead>
@@ -389,8 +398,8 @@
           <tbody>
             <tr><td><code>MouseController-pe-x64.exe</code></td><td data-zh="64 位 PE / 无运行时（自包含）" data-en="64-bit WinPE / no runtime (self-contained)">64 位 PE / 无运行时（自包含）</td><td class="size">~46 MB</td></tr>
             <tr><td><code>MouseController-pe-x86.exe</code></td><td data-zh="32 位 PE / 无运行时（自包含）" data-en="32-bit WinPE / no runtime (self-contained)">32 位 PE / 无运行时（自包含）</td><td class="size">~42 MB</td></tr>
-            <tr><td><code>MouseController-x64.exe</code></td><td data-zh="64 位 Windows（需 .NET 9 运行时）" data-en="64-bit Windows (needs .NET 9 runtime)">64 位 Windows（需 .NET 9 运行时）</td><td class="size">~172 KB</td></tr>
-            <tr><td><code>MouseController-x86.exe</code></td><td data-zh="32 位 Windows（需 .NET 9 运行时）" data-en="32-bit Windows (needs .NET 9 runtime)">32 位 Windows（需 .NET 9 运行时）</td><td class="size">~145 KB</td></tr>
+            <tr><td><code>MouseController-x64.exe</code></td><td data-zh="64 位 Windows（需 .NET 9 运行时）" data-en="64-bit Windows (needs .NET 9 runtime)">64 位 Windows（需 .NET 9 运行时）</td><td class="size">~191 KB</td></tr>
+            <tr><td><code>MouseController-x86.exe</code></td><td data-zh="32 位 Windows（需 .NET 9 运行时）" data-en="32-bit Windows (needs .NET 9 runtime)">32 位 Windows（需 .NET 9 运行时）</td><td class="size">~164 KB</td></tr>
           </tbody>
         </table>
       </div>
@@ -408,7 +417,7 @@
           </span>
           <span class="brand-name">MouseController</span>
         </div>
-        <p class="foot-note" data-zh="键盘驱动的 Windows 鼠标控制与连点器，基于 .NET 9 + WinForms，全部走原生 API。" data-en="A keyboard-driven mouse controller and auto-clicker for Windows, built on .NET 9 + WinForms with native APIs.">键盘驱动的 Windows 鼠标控制与连点器，基于 .NET 9 + WinForms，全部走原生 API。</p>
+        <p class="foot-note" data-zh="键盘驱动的 Windows 鼠标控制与连点器，基于 .NET 9 + WinForms。由 BottleMan-SR7 开发。" data-en="A keyboard-driven mouse controller and auto-clicker for Windows, built on .NET 9 + WinForms. Developed by BottleMan-SR7.">键盘驱动的 Windows 鼠标控制与连点器，基于 .NET 9 + WinForms。由 BottleMan-SR7 开发。</p>
       </div>
       <div class="foot-col">
         <h4 data-zh="项目" data-en="Project">项目</h4>
@@ -419,11 +428,12 @@
       <div class="foot-col">
         <h4 data-zh="关于" data-en="About">关于</h4>
         <a href="https://github.com/ChuxueTeam/MouseController/blob/main/LICENSE" data-zh="MIT 许可证" data-en="MIT License">MIT 许可证</a>
+        <a href="https://github.com/BottleMan-SR7" data-zh="开发者主页" data-en="Developer">开发者主页</a>
         <a href="https://github.com/ChuxueTeam/MouseController#构建" data-zh="构建说明" data-en="Build guide">构建说明</a>
       </div>
     </div>
     <div class="foot-bottom">
-      <span>© 2026 ChuxueTeam · MouseController</span>
+      <span>© 2026 BottleMan-SR7 · MouseController</span>
       <span data-zh="单文件 · 免安装 · 无第三方依赖" data-en="Single file · Portable · No third-party dependencies">单文件 · 免安装 · 无第三方依赖</span>
     </div>
   </div>

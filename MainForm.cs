@@ -9,6 +9,9 @@ public sealed class MainForm : Form
     private NotifyIcon? _trayIcon;
     private bool _exitRequested;
 
+    /// <summary>设置对话框请求捕获新快捷键时的回调（非空即处于捕获模式）。</summary>
+    private Action<HotkeyInfo>? _captureHandler;
+
     // ---- 控件 ----
     private Label _lblCoords = null!;
     private NumericUpDown _nudLarge = null!, _nudMedium = null!, _nudSmall = null!, _nudTiny = null!;
@@ -30,6 +33,7 @@ public sealed class MainForm : Form
     {
         _settings = settings;
         BuildUi();
+        ApplyFonts();
         _clicker.Progress += n => SafeUi(() => _lblClickStatus.Text = $"正在点击：{n} / {(int)_nudCount.Value}");
         _clicker.Finished += OnClickerFinished;
     }
@@ -39,12 +43,11 @@ public sealed class MainForm : Form
     private void BuildUi()
     {
         Text = "MouseController · 鼠标控制器";
-        ClientSize = new Size(560, 720);
-        MinimumSize = new Size(584, 762);
+        ClientSize = new Size(560, 740);
+        MinimumSize = new Size(584, 782);
         FormBorderStyle = FormBorderStyle.Sizable;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
-        Font = new Font("Microsoft YaHei UI", 9F);
 
         // ---- 鼠标坐标 ----
         var lblTitle = new Label
@@ -57,7 +60,6 @@ public sealed class MainForm : Form
         _lblCoords = new Label
         {
             Text = "X: 0    Y: 0",
-            Font = new Font("Consolas", 20F, FontStyle.Bold),
             Location = new Point(15, 30),
             Size = new Size(526, 42),
         };
@@ -162,7 +164,7 @@ public sealed class MainForm : Form
         {
             Location = new Point(380, 18),
             Size = new Size(56, 23),
-            Minimum = 0,   // 0 = 无间隔极速连点
+            Minimum = 0,
             Maximum = 5000,
             Value = Math.Clamp(_settings.ClickIntervalMs, 0, 5000),
         };
@@ -192,26 +194,46 @@ public sealed class MainForm : Form
         {
             Text = "快捷键",
             Location = new Point(12, 342),
-            Size = new Size(532, 358),
+            Size = new Size(532, 346),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
         };
         _lblKeys = new TextBox
         {
             Location = new Point(22, 26),
-            Size = new Size(488, 318),
-            Font = new Font("Consolas", 10F),
+            Size = new Size(488, 306),
             Text = BuildKeyHelp(),
             Multiline = true,
             ReadOnly = true,
-            WordWrap = true,            // 超宽自动折行，永不横向截断
+            WordWrap = true,
             BorderStyle = BorderStyle.None,
-            ScrollBars = ScrollBars.None,
+            ScrollBars = ScrollBars.Vertical,
             TabStop = false,
             BackColor = SystemColors.Control,
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
         };
         grpKeys.Controls.Add(_lblKeys);
         Controls.Add(grpKeys);
+
+        // ---- 底部按钮 ----
+        var btnSettings = new Button
+        {
+            Text = "设置",
+            Location = new Point(12, 700),
+            Size = new Size(96, 30),
+            Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+        };
+        btnSettings.Click += (_, _) => OpenSettings();
+        Controls.Add(btnSettings);
+
+        var btnAbout = new Button
+        {
+            Text = "关于",
+            Location = new Point(116, 700),
+            Size = new Size(96, 30),
+            Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+        };
+        btnAbout.Click += (_, _) => OpenAbout();
+        Controls.Add(btnAbout);
 
         // ---- 坐标刷新定时器 ----
         _posTimer = new System.Windows.Forms.Timer { Interval = 50 };
@@ -238,27 +260,69 @@ public sealed class MainForm : Form
         return nud;
     }
 
-    private static string BuildKeyHelp() =>
-        "方向键移动（按住连续移动，步长见上方设置）\r\n" +
-        "  Alt+方向键               大幅\r\n" +
-        "  Shift+Alt+方向键         中幅\r\n" +
-        "  Ctrl+Alt+方向键          小幅\r\n" +
-        "  Ctrl+Shift+Alt+方向键    微小\r\n" +
-        "鼠标点击\r\n" +
-        "  Ctrl+Alt+1 左键    Ctrl+Alt+2 中键    Ctrl+Alt+3 右键\r\n" +
-        "连点器\r\n" +
-        "  Ctrl+Alt+4 启动/停止（也可点上方按钮）\r\n" +
-        "其他\r\n" +
-        "  Ctrl+M 呼出主界面       Ctrl+Alt+Q 退出程序\r\n" +
-        "  关闭窗口会最小化到托盘\r\n" +
-        "注：Alt+左右键在浏览器里是前进/后退，运行期间会被本软件用作移动。\r\n" +
-        "另：Ctrl+M 不与其它常用键冲突。";
+    private string BuildKeyHelp()
+    {
+        var hk = _settings.Hotkeys;
+        return
+            "方向键移动（按住连续移动，步长见上方设置）\r\n" +
+            Fmt(hk.MoveLarge.Display(true), "大幅") +
+            Fmt(hk.MoveMedium.Display(true), "中幅") +
+            Fmt(hk.MoveSmall.Display(true), "小幅") +
+            Fmt(hk.MoveTiny.Display(true), "微小") +
+            "鼠标点击\r\n" +
+            Fmt(hk.ClickLeft.Display(false), "左键") +
+            Fmt(hk.ClickMiddle.Display(false), "中键") +
+            Fmt(hk.ClickRight.Display(false), "右键") +
+            "连点器\r\n" +
+            Fmt(hk.ClickerToggle.Display(false), "启动/停止（也可点上方按钮）") +
+            "其他\r\n" +
+            Fmt(hk.ShowMain.Display(false), "呼出主界面") +
+            Fmt(hk.Quit.Display(false), "退出程序") +
+            Fmt("", "关闭窗口会最小化到托盘") +
+            "\r\n以上快捷键均可在「设置」中修改，界面字体也可更换。\r\n" +
+            "注：Alt+左右键在浏览器里是前进/后退，运行期间会被本软件用作移动。";
+    }
+
+    private static string Fmt(string key, string desc) => "  " + key.PadRight(24) + desc + "\r\n";
+
+    // ================= 字体 =================
+
+    private void ApplyFonts()
+    {
+        float size = Math.Clamp(_settings.FontSize, 8F, 14F);
+        Font uiFont;
+        try
+        {
+            uiFont = new Font(_settings.FontFamily, size);
+            if (!uiFont.Name.Equals(_settings.FontFamily, StringComparison.OrdinalIgnoreCase))
+                uiFont = new Font("Microsoft YaHei UI", size);
+        }
+        catch
+        {
+            uiFont = new Font("Microsoft YaHei UI", size);
+        }
+
+        SuspendLayout();
+        Font = uiFont;
+        foreach (Control c in Controls)
+            ApplyFontRecursive(c, uiFont);
+        _lblCoords.Font = new Font("Consolas", size + 11F, FontStyle.Bold);
+        _lblKeys.Font = new Font("Consolas", size + 1F);
+        ResumeLayout();
+    }
+
+    private void ApplyFontRecursive(Control c, Font f)
+    {
+        if (c != _lblCoords && c != _lblKeys)
+            c.Font = f;
+        foreach (Control child in c.Controls)
+            ApplyFontRecursive(child, f);
+    }
 
     // ================= 生命周期 =================
 
     private void OnLoad(object? sender, EventArgs e)
     {
-        // 创建托盘图标
         _trayIcon = new NotifyIcon
         {
             Icon = SystemIcons.Application,
@@ -272,7 +336,6 @@ public sealed class MainForm : Form
         _trayIcon.ContextMenuStrip = menu;
         _trayIcon.DoubleClick += (_, _) => ShowMain();
 
-        // 安装键盘钩子
         if (!_hook.Install())
         {
             MessageBox.Show(
@@ -283,9 +346,32 @@ public sealed class MainForm : Form
         _hook.ComboDown += OnComboDown;
     }
 
+    // ================= 设置 / 关于 =================
+
+    private void OpenSettings()
+    {
+        using var dlg = new SettingsForm(_settings, this);
+        if (dlg.ShowDialog(this) == DialogResult.OK)
+        {
+            _lblKeys.Text = BuildKeyHelp();
+            ApplyFonts();
+            SaveSettings();
+        }
+    }
+
+    private void OpenAbout()
+    {
+        using var dlg = new AboutForm();
+        dlg.ShowDialog(this);
+    }
+
+    /// <summary>进入快捷键捕获模式：所有组合键交给回调，不再触发鼠标动作。</summary>
+    public void BeginCapture(Action<HotkeyInfo> handler) => _captureHandler = handler;
+
+    public void EndCapture() => _captureHandler = null;
+
     // ================= 窗口消息 =================
 
-    /// <summary>再次运行本程序时系统发来的“显示主界面”消息（WM_SHOWMAIN）。</summary>
     protected override void WndProc(ref Message m)
     {
         if (m.Msg == Native.WM_SHOWMAIN)
@@ -300,59 +386,43 @@ public sealed class MainForm : Form
 
     private bool OnComboDown(HotkeyInfo h)
     {
-        if (h.Win) return false; // Win 系不处理（留给系统）
-
-        switch (h.Vk)
+        // 设置界面正在捕获新快捷键
+        if (_captureHandler != null)
         {
-            case Native.VK_UP:
-            case Native.VK_DOWN:
-            case Native.VK_LEFT:
-            case Native.VK_RIGHT:
-                if (h.Alt && !h.Ctrl && !h.Shift)
-                {
-                    MoveCursorBy(h, StepLarge);
-                    return true;
-                }
-                if (h.Alt && h.Shift && !h.Ctrl)
-                {
-                    MoveCursorBy(h, StepMedium);
-                    return true;
-                }
-                if (h.Alt && h.Ctrl && !h.Shift)
-                {
-                    MoveCursorBy(h, StepSmall);
-                    return true;
-                }
-                if (h.Alt && h.Ctrl && h.Shift)
-                {
-                    MoveCursorBy(h, StepTiny);
-                    return true;
-                }
-                return false;
-
-            case Native.VK_1:
-                if (h.Ctrl && h.Alt && !h.Shift) { SimulateClick(ClickButton.Left); return true; }
-                return false;
-            case Native.VK_2:
-                if (h.Ctrl && h.Alt && !h.Shift) { SimulateClick(ClickButton.Middle); return true; }
-                return false;
-            case Native.VK_3:
-                if (h.Ctrl && h.Alt && !h.Shift) { SimulateClick(ClickButton.Right); return true; }
-                return false;
-            case Native.VK_4:
-                if (h.Ctrl && h.Alt && !h.Shift) { ToggleClicker(); return true; }
-                return false;
-
-            case Native.VK_M:
-                if (h.Ctrl && !h.Alt && !h.Shift) { ShowMain(); return true; }
-                return false;
-
-            case Native.VK_Q:
-                if (h.Ctrl && h.Alt && !h.Shift) { ExitApp(); return true; }
-                return false;
+            if (IsModifierVk(h.Vk)) return true; // 纯修饰键，继续等待
+            var cb = _captureHandler;
+            cb(h);
+            return true;
         }
+
+        var hk = _settings.Hotkeys;
+
+        // 方向键移动（四档，仅比较修饰键）
+        if (h.Vk is Native.VK_UP or Native.VK_DOWN or Native.VK_LEFT or Native.VK_RIGHT)
+        {
+            if (hk.MoveLarge.Matches(h)) { MoveCursorBy(h, StepLarge); return true; }
+            if (hk.MoveMedium.Matches(h)) { MoveCursorBy(h, StepMedium); return true; }
+            if (hk.MoveSmall.Matches(h)) { MoveCursorBy(h, StepSmall); return true; }
+            if (hk.MoveTiny.Matches(h)) { MoveCursorBy(h, StepTiny); return true; }
+            return false;
+        }
+
+        if (hk.ClickLeft.Matches(h)) { SimulateClick(ClickButton.Left); return true; }
+        if (hk.ClickMiddle.Matches(h)) { SimulateClick(ClickButton.Middle); return true; }
+        if (hk.ClickRight.Matches(h)) { SimulateClick(ClickButton.Right); return true; }
+        if (hk.ClickerToggle.Matches(h)) { ToggleClicker(); return true; }
+        if (hk.ShowMain.Matches(h)) { ShowMain(); return true; }
+        if (hk.Quit.Matches(h)) { ExitApp(); return true; }
+
         return false;
     }
+
+    private static bool IsModifierVk(uint vk) => vk switch
+    {
+        0x10 or 0x11 or 0x12 or 0x5B or 0x5C          // Shift / Ctrl / Alt / Win
+        or 0xA0 or 0xA1 or 0xA2 or 0xA3 or 0xA4 or 0xA5 => true,
+        _ => false,
+    };
 
     private void MoveCursorBy(HotkeyInfo h, int step)
     {
@@ -441,7 +511,6 @@ public sealed class MainForm : Form
     {
         if (!_exitRequested && e.CloseReason == CloseReason.UserClosing)
         {
-            // 关窗口 = 藏到托盘
             e.Cancel = true;
             Hide();
             return;

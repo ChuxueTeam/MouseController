@@ -4,7 +4,11 @@ using System.Runtime.InteropServices;
 namespace MouseController;
 
 /// <summary>组合键信息。</summary>
-public readonly record struct HotkeyInfo(uint Vk, bool Ctrl, bool Shift, bool Win, bool Alt);
+public readonly record struct HotkeyInfo(uint Vk, bool Ctrl, bool Shift, bool Win, bool Alt)
+{
+    /// <summary>按下的修饰键数量。</summary>
+    public int ModCount => (Ctrl ? 1 : 0) + (Shift ? 1 : 0) + (Win ? 1 : 0) + (Alt ? 1 : 0);
+}
 
 /// <summary>
 /// 低级键盘钩子（WH_KEYBOARD_LL）。
