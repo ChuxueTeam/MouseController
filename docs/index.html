@@ -20,6 +20,7 @@
     --on-surface-variant: #4c5a75;
     --outline-variant: #d5def0;
     --nav-bg: rgba(255,255,255,.86);
+    --seg-active-bg: #ffffff;
     --shadow-1: 0 1px 2px rgba(16,40,90,.10), 0 2px 8px rgba(16,40,90,.08);
     --shadow-2: 0 2px 6px rgba(16,40,90,.12), 0 10px 30px rgba(16,40,90,.12);
     --grid-line: rgba(43,88,180,.045);
@@ -39,6 +40,7 @@
       --on-surface-variant: #a7b4c9;
       --outline-variant: #2b3648;
       --nav-bg: rgba(18,23,31,.86);
+      --seg-active-bg: #2b3648;
       --shadow-1: 0 1px 2px rgba(0,0,0,.4), 0 2px 8px rgba(0,0,0,.3);
       --shadow-2: 0 2px 8px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.4);
       --grid-line: rgba(120,160,255,.05);
@@ -90,9 +92,9 @@
     transition: max-width .42s cubic-bezier(.2,0,0,1), padding .42s cubic-bezier(.2,0,0,1),
                 background .25s ease, box-shadow .3s ease, backdrop-filter .3s ease;
   }
-  /* 滚动后：出现并缩短的大胶囊 */
+  /* 滚动后：长条岛出现（保持接近全宽，仅轻微收缩 + 浮起） */
   body.scrolled .nav-pill {
-    max-width: 560px; padding: 8px 10px 8px 18px;
+    max-width: 1020px; padding: 8px 14px 8px 18px;
     background: var(--nav-bg);
     backdrop-filter: blur(14px) saturate(160%);
     -webkit-backdrop-filter: blur(14px) saturate(160%);
@@ -114,17 +116,27 @@
   }
   .nav-link:hover { background: var(--surface-container-high); color: var(--on-surface); }
 
-  /* 语言按钮：未滚动隐藏，滚动后淡入 */
-  .lang-btn {
-    font-family: inherit; font-size: 13.5px; font-weight: 600;
-    color: var(--on-primary-container); background: var(--primary-container);
-    border: none; border-radius: 999px; padding: 7px 16px; cursor: pointer;
-    white-space: nowrap; letter-spacing: .2px;
-    opacity: 0; transform: scale(.86); pointer-events: none;
-    transition: opacity .28s ease .06s, transform .28s cubic-bezier(.2,0,0,1) .06s, background .15s;
+  /* 语言分段开关（两个按钮）：未滚动隐藏，滚动后淡入 */
+  .lang-seg {
+    display: inline-flex; align-items: center; gap: 2px; padding: 3px;
+    border-radius: 999px; background: var(--surface-container);
+    border: 1px solid var(--outline-variant);
+    opacity: 0; transform: scale(.9); pointer-events: none;
+    transition: opacity .28s ease .06s, transform .28s cubic-bezier(.2,0,0,1) .06s;
   }
-  .lang-btn:hover { background: color-mix(in srgb, var(--primary-container) 82%, var(--primary)); }
-  body.scrolled .lang-btn { opacity: 1; transform: scale(1); pointer-events: auto; }
+  body.scrolled .lang-seg { opacity: 1; transform: scale(1); pointer-events: auto; }
+  .seg-item {
+    font-family: inherit; font-size: 12.5px; font-weight: 600; line-height: 1;
+    padding: 7px 13px; border-radius: 999px; border: 1px solid transparent;
+    background: transparent; color: var(--on-surface-variant); cursor: pointer;
+    transition: background .18s, color .18s, box-shadow .18s, border-color .18s;
+  }
+  .seg-item:hover { color: var(--on-surface); }
+  .seg-item.active {
+    background: var(--seg-active-bg); color: var(--on-surface);
+    border-color: var(--outline-variant);
+    box-shadow: 0 1px 2px rgba(16,40,90,.10);
+  }
   .nav-link { opacity: 0; pointer-events: none; transition: opacity .28s ease .06s, background .15s, color .15s; }
   body.scrolled .nav-link { opacity: 1; pointer-events: auto; }
 
@@ -232,7 +244,10 @@
     <div class="nav-actions">
       <a class="nav-link" href="https://github.com/ChuxueTeam/MouseController" data-zh="源码" data-en="Source">源码</a>
       <a class="nav-link" href="https://github.com/ChuxueTeam/MouseController/releases" data-zh="下载" data-en="Download">下载</a>
-      <button class="lang-btn" id="langBtn" type="button" title="切换语言 / Switch language">中文</button>
+      <div class="lang-seg" id="langSeg" role="group" aria-label="Language">
+        <button class="seg-item active" data-lang="zh" type="button">中文</button>
+        <button class="seg-item" data-lang="en" type="button">EN</button>
+      </div>
     </div>
   </div>
 </div>
@@ -414,10 +429,10 @@
 (function () {
   var LANG_KEY = 'mc-lang';
   var lang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'zh';
-  var langBtn = document.getElementById('langBtn');
+  var segItems = document.querySelectorAll('.seg-item');
 
   function applyLang(next) {
-    lang = next;
+    lang = next === 'en' ? 'en' : 'zh';
     localStorage.setItem(LANG_KEY, lang);
     document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
     document.title = lang === 'zh'
@@ -428,12 +443,16 @@
       var e = els[i];
       e.textContent = lang === 'zh' ? e.getAttribute('data-zh') : e.getAttribute('data-en');
     }
-    langBtn.textContent = lang === 'zh' ? '中文' : 'EN';
+    for (var j = 0; j < segItems.length; j++) {
+      segItems[j].classList.toggle('active', segItems[j].getAttribute('data-lang') === lang);
+    }
   }
 
-  langBtn.addEventListener('click', function () {
-    applyLang(lang === 'zh' ? 'en' : 'zh');
-  });
+  for (var k = 0; k < segItems.length; k++) {
+    segItems[k].addEventListener('click', function () {
+      applyLang(this.getAttribute('data-lang'));
+    });
+  }
 
   // 滚动状态：胶囊出现并缩短
   function updateNav() {
