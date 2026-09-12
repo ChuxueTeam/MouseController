@@ -5,228 +5,445 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MouseController · 鼠标控制与连点器</title>
 <style>
-  /* ========== Material Design 3 tokens ========== */
+  /* ========== MD3 blue tokens ========== */
   :root {
-    --primary: #6750a4;
+    --primary: #1b6ef3;
     --on-primary: #ffffff;
-    --primary-container: #eaddff;
-    --on-primary-container: #21005d;
-    --secondary-container: #e8def8;
-    --on-secondary-container: #1d192b;
-    --surface: #fef7ff;
-    --surface-dim: #ded8e1;
-    --surface-container: #f3edf7;
-    --surface-container-high: #ece6f0;
-    --on-surface: #1d1b20;
-    --on-surface-variant: #49454f;
-    --outline: #79747e;
-    --outline-variant: #cac4d0;
-    --inverse-surface: #322f35;
-    --inverse-on-surface: #f5eff7;
-    --shadow: rgba(0,0,0,.18);
+    --primary-container: #d9e7ff;
+    --on-primary-container: #001a41;
+    --secondary-container: #e6edfb;
+    --on-secondary-container: #0c1b33;
+    --surface: #f8faff;
+    --surface-container: #eef3fd;
+    --surface-container-high: #e4ecfa;
+    --on-surface: #101a2b;
+    --on-surface-variant: #4c5a75;
+    --outline-variant: #d5def0;
+    --nav-bg: rgba(255,255,255,.86);
+    --shadow-1: 0 1px 2px rgba(16,40,90,.10), 0 2px 8px rgba(16,40,90,.08);
+    --shadow-2: 0 2px 6px rgba(16,40,90,.12), 0 10px 30px rgba(16,40,90,.12);
+    --grid-line: rgba(43,88,180,.045);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --primary: #d0bcff;
-      --on-primary: #381e72;
-      --primary-container: #4f378b;
-      --on-primary-container: #eaddff;
-      --secondary-container: #4a4458;
-      --on-secondary-container: #e8def8;
-      --surface: #141218;
-      --surface-container: #211f26;
-      --surface-container-high: #2b2930;
-      --on-surface: #e6e0e9;
-      --on-surface-variant: #cac4d0;
-      --outline: #938f99;
-      --outline-variant: #49454f;
+      --primary: #adc6ff;
+      --on-primary: #002e69;
+      --primary-container: #23406f;
+      --on-primary-container: #d9e7ff;
+      --secondary-container: #1b2637;
+      --on-secondary-container: #dbe4f5;
+      --surface: #0d1117;
+      --surface-container: #161c26;
+      --surface-container-high: #1e2635;
+      --on-surface: #e2e8f2;
+      --on-surface-variant: #a7b4c9;
+      --outline-variant: #2b3648;
+      --nav-bg: rgba(18,23,31,.86);
+      --shadow-1: 0 1px 2px rgba(0,0,0,.4), 0 2px 8px rgba(0,0,0,.3);
+      --shadow-2: 0 2px 8px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.4);
+      --grid-line: rgba(120,160,255,.05);
     }
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     font-family: "Segoe UI", "Microsoft YaHei UI", "Noto Sans SC", sans-serif;
     background: var(--surface); color: var(--on-surface);
     line-height: 1.65; -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
   }
+  /* 蓝白渐变 + 细网格背景 */
+  .backdrop {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(1100px 520px at 50% -8%, #d7e6ff 0%, rgba(215,230,255,0) 62%),
+      linear-gradient(180deg, #f2f7ff 0%, #fbfcff 55%, #ffffff 100%);
+  }
+  .backdrop::after {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,0) 70%);
+    -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,0) 70%);
+  }
+  @media (prefers-color-scheme: dark) {
+    .backdrop {
+      background:
+        radial-gradient(1100px 520px at 50% -8%, #17233b 0%, rgba(23,35,59,0) 62%),
+        linear-gradient(180deg, #0d1117 0%, #0d1117 100%);
+    }
+  }
+
   .wrap { max-width: 920px; margin: 0 auto; padding: 0 20px; }
 
-  /* ---------- Hero ---------- */
-  header { padding: 72px 0 56px; text-align: center; }
-  .app-icon {
-    width: 72px; height: 72px; margin: 0 auto 20px;
-    background: var(--primary-container); border-radius: 24px;
+  /* ========== 顶部导航（固定，滚动后收缩为 MD3 大胶囊） ========== */
+  .nav-layer { position: fixed; top: 0; left: 0; right: 0; z-index: 50; padding: 14px 20px; display: flex; justify-content: center; pointer-events: none; }
+  .nav-pill {
+    pointer-events: auto;
+    width: 100%; max-width: 1080px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px; border-radius: 999px;
+    background: transparent; box-shadow: none;
+    transition: max-width .42s cubic-bezier(.2,0,0,1), padding .42s cubic-bezier(.2,0,0,1),
+                background .25s ease, box-shadow .3s ease, backdrop-filter .3s ease;
+  }
+  /* 滚动后：出现并缩短的大胶囊 */
+  body.scrolled .nav-pill {
+    max-width: 560px; padding: 8px 10px 8px 18px;
+    background: var(--nav-bg);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    box-shadow: var(--shadow-2);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--on-surface); }
+  .brand-mark {
+    width: 32px; height: 32px; border-radius: 10px; flex: none;
+    background: linear-gradient(135deg, #4c8dff, #1b5fe0); color: #fff;
     display: flex; align-items: center; justify-content: center;
   }
-  h1 {
-    font-size: 46px; font-weight: 500; letter-spacing: -0.5px; line-height: 1.2;
-  }
-  .tagline { font-size: 19px; color: var(--on-surface-variant); margin-top: 12px; }
-  .tagline-en { font-size: 15px; color: var(--on-surface-variant); opacity: .75; margin-top: 4px; }
-  .cta { margin-top: 32px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .brand-name { font-size: 15.5px; font-weight: 700; letter-spacing: -.2px; white-space: nowrap; }
 
-  .btn {
+  .nav-actions { display: flex; align-items: center; gap: 10px; }
+  .nav-link {
+    font-size: 14px; color: var(--on-surface-variant); text-decoration: none;
+    padding: 7px 14px; border-radius: 999px; white-space: nowrap;
+    transition: background .15s, color .15s;
+  }
+  .nav-link:hover { background: var(--surface-container-high); color: var(--on-surface); }
+
+  /* 语言按钮：未滚动隐藏，滚动后淡入 */
+  .lang-btn {
+    font-family: inherit; font-size: 13.5px; font-weight: 600;
+    color: var(--on-primary-container); background: var(--primary-container);
+    border: none; border-radius: 999px; padding: 7px 16px; cursor: pointer;
+    white-space: nowrap; letter-spacing: .2px;
+    opacity: 0; transform: scale(.86); pointer-events: none;
+    transition: opacity .28s ease .06s, transform .28s cubic-bezier(.2,0,0,1) .06s, background .15s;
+  }
+  .lang-btn:hover { background: color-mix(in srgb, var(--primary-container) 82%, var(--primary)); }
+  body.scrolled .lang-btn { opacity: 1; transform: scale(1); pointer-events: auto; }
+  .nav-link { opacity: 0; pointer-events: none; transition: opacity .28s ease .06s, background .15s, color .15s; }
+  body.scrolled .nav-link { opacity: 1; pointer-events: auto; }
+
+  /* ========== Hero ========== */
+  .hero { padding: 128px 0 56px; text-align: center; }
+  .announce {
     display: inline-flex; align-items: center; gap: 8px;
-    padding: 12px 26px; border-radius: 999px;
-    font-size: 16px; font-weight: 500; text-decoration: none;
-    transition: background .15s, box-shadow .15s;
+    font-size: 13.5px; color: var(--on-surface-variant); text-decoration: none;
+    padding: 7px 16px; border-radius: 999px; background: var(--secondary-container);
+    margin-bottom: 26px;
+  }
+  .announce:hover { color: var(--primary); }
+  .announce b { color: var(--primary); font-weight: 600; }
+
+  .app-icon {
+    width: 76px; height: 76px; margin: 0 auto 22px; border-radius: 24px;
+    background: linear-gradient(135deg, #4c8dff, #1b5fe0);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; box-shadow: 0 10px 26px rgba(27,95,224,.28);
+  }
+  h1 { font-size: 52px; font-weight: 700; letter-spacing: -1px; line-height: 1.1; }
+  .tagline { font-size: 19px; color: var(--on-surface-variant); margin-top: 16px; }
+
+  .cta { margin-top: 34px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 13px 30px; border-radius: 999px;
+    font-size: 16px; font-weight: 600; text-decoration: none;
+    transition: box-shadow .18s, transform .18s, background .18s;
   }
   .btn-filled { background: var(--primary); color: var(--on-primary); }
-  .btn-filled:hover { box-shadow: 0 1px 3px var(--shadow), 0 4px 8px rgba(0,0,0,.12); }
-  .btn-tonal { background: var(--secondary-container); color: var(--on-secondary-container); }
-  .btn-tonal:hover { box-shadow: 0 1px 3px var(--shadow); }
-  .badge { font-size: 13px; color: var(--on-surface-variant); margin-top: 22px; }
+  .btn-filled:hover { box-shadow: 0 6px 20px rgba(27,95,224,.35); transform: translateY(-1px); }
+  .btn-tonal { background: var(--surface); color: var(--on-surface); border: 1px solid var(--outline-variant); }
+  .btn-tonal:hover { box-shadow: var(--shadow-1); transform: translateY(-1px); }
+  .badge { font-size: 13px; color: var(--on-surface-variant); margin-top: 24px; }
 
-  /* ---------- Sections ---------- */
-  section { padding: 26px 0; }
-  h2 { font-size: 26px; font-weight: 500; margin-bottom: 6px; }
-  .sec-sub { color: var(--on-surface-variant); font-size: 14px; margin-bottom: 22px; }
+  /* ========== Sections ========== */
+  section { padding: 30px 0; }
+  h2 { font-size: 27px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 22px; }
 
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
   .card {
-    background: var(--surface-container); border-radius: 16px;
-    padding: 22px; transition: background .15s;
+    background: var(--surface); border: 1px solid var(--outline-variant);
+    border-radius: 20px; padding: 22px; transition: box-shadow .2s, transform .2s, border-color .2s;
   }
-  .card:hover { background: var(--surface-container-high); }
+  .card:hover { box-shadow: var(--shadow-1); transform: translateY(-2px); border-color: color-mix(in srgb, var(--outline-variant) 60%, var(--primary)); }
   .icon-chip {
-    width: 44px; height: 44px; border-radius: 14px;
+    width: 46px; height: 46px; border-radius: 15px; margin-bottom: 15px;
     background: var(--primary-container); color: var(--on-primary-container);
-    display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: center;
   }
-  .card h3 { font-size: 16px; font-weight: 600; }
-  .card .en { display: block; font-size: 12.5px; color: var(--on-surface-variant); margin-top: 2px; }
+  .card h3 { font-size: 16.5px; font-weight: 700; }
   .card p { font-size: 14px; color: var(--on-surface-variant); margin-top: 8px; }
 
-  /* ---------- Table ---------- */
+  /* ========== Tables ========== */
   .tbl-wrap {
-    background: var(--surface-container-low, var(--surface-container));
-    border: 1px solid var(--outline-variant); border-radius: 16px; overflow: hidden;
+    background: var(--surface); border: 1px solid var(--outline-variant);
+    border-radius: 20px; overflow: hidden;
   }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { text-align: left; padding: 13px 18px; border-bottom: 1px solid var(--outline-variant); }
-  thead th { color: var(--on-surface-variant); font-weight: 500; font-size: 12.5px; }
+  thead th { color: var(--on-surface-variant); font-weight: 600; font-size: 12.5px; background: var(--surface-container); }
   tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover { background: var(--surface-container-high); }
+  tbody tr:hover { background: var(--surface-container); }
   code {
-    background: var(--surface-container-high); padding: 3px 9px;
-    border-radius: 8px; font-size: 13px; font-family: Consolas, "Cascadia Mono", monospace;
+    background: var(--surface-container-high); padding: 3px 9px; border-radius: 8px;
+    font-size: 13px; font-family: Consolas, "Cascadia Mono", monospace; white-space: nowrap;
   }
-  .size { white-space: nowrap; }
+  .size { white-space: nowrap; color: var(--on-surface-variant); }
 
-  /* ---------- Footer ---------- */
-  footer { padding: 44px 0 56px; text-align: center; font-size: 13px; color: var(--on-surface-variant); }
-  footer a { color: var(--primary); text-decoration: none; }
+  /* ========== Footer ========== */
+  footer { padding: 56px 0 44px; margin-top: 24px; border-top: 1px solid var(--outline-variant); }
+  .foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 28px; }
+  .foot-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .foot-note { font-size: 13px; color: var(--on-surface-variant); }
+  .foot-col h4 { font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+  .foot-col a { display: block; font-size: 13.5px; color: var(--on-surface-variant); text-decoration: none; padding: 4px 0; }
+  .foot-col a:hover { color: var(--primary); }
+  .foot-bottom { margin-top: 32px; font-size: 12.5px; color: var(--on-surface-variant); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .foot-bottom a { color: var(--primary); text-decoration: none; }
 
-  @media (max-width: 640px) {
-    h1 { font-size: 34px; }
+  @media (max-width: 680px) {
+    h1 { font-size: 36px; }
+    .hero { padding-top: 108px; }
+    .foot-grid { grid-template-columns: 1fr 1fr; }
     .th-hide { display: none; }
+    body.scrolled .nav-pill { max-width: 92%; }
   }
 </style>
 </head>
 <body>
+<div class="backdrop"></div>
 
-<header>
-  <div class="wrap">
-    <div class="app-icon">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="8" y="3" width="8" height="18" rx="4"/><path d="M12 3v4"/>
-      </svg>
+<!-- ===== 顶部导航胶囊 ===== -->
+<div class="nav-layer">
+  <div class="nav-pill" id="navPill">
+    <a class="brand" href="https://github.com/ChuxueTeam/MouseController">
+      <span class="brand-mark">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="8" y="3" width="8" height="18" rx="4"/><path d="M12 3v4"/>
+        </svg>
+      </span>
+      <span class="brand-name">MouseController</span>
+    </a>
+    <div class="nav-actions">
+      <a class="nav-link" href="https://github.com/ChuxueTeam/MouseController" data-zh="源码" data-en="Source">源码</a>
+      <a class="nav-link" href="https://github.com/ChuxueTeam/MouseController/releases" data-zh="下载" data-en="Download">下载</a>
+      <button class="lang-btn" id="langBtn" type="button" title="切换语言 / Switch language">中文</button>
     </div>
-    <h1>MouseController</h1>
-    <p class="tagline">键盘驱动的全局鼠标控制与连点器</p>
-    <p class="tagline-en">Keyboard-driven mouse controller &amp; auto-clicker for Windows</p>
-    <div class="cta">
-      <a class="btn btn-filled" href="https://github.com/ChuxueTeam/MouseController/releases/latest">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5"/><path d="M4 19h16"/></svg>
-        下载 · Download
+  </div>
+</div>
+
+<main>
+  <!-- ===== Hero ===== -->
+  <section class="hero">
+    <div class="wrap">
+      <a class="announce" href="https://github.com/ChuxueTeam/MouseController/releases/latest">
+        <span data-zh="v1.0.0 已发布 · 支持 PE 免依赖运行" data-en="v1.0.0 released · runs on WinPE, no dependencies">v1.0.0 已发布 · 支持 PE 免依赖运行</span> →
       </a>
-      <a class="btn btn-tonal" href="https://github.com/ChuxueTeam/MouseController">查看源码 · Source</a>
+      <div class="app-icon">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="8" y="3" width="8" height="18" rx="4"/><path d="M12 3v4"/>
+        </svg>
+      </div>
+      <h1>MouseController</h1>
+      <p class="tagline" data-zh="键盘驱动的全局鼠标控制与连点器" data-en="Keyboard-driven mouse control &amp; auto-clicker">键盘驱动的全局鼠标控制与连点器</p>
+      <div class="cta">
+        <a class="btn btn-filled" href="https://github.com/ChuxueTeam/MouseController/releases/latest">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5"/><path d="M4 19h16"/></svg>
+          <span data-zh="下载最新版" data-en="Download">下载最新版</span>
+        </a>
+        <a class="btn btn-tonal" href="https://github.com/ChuxueTeam/MouseController">
+          <span data-zh="查看源码" data-en="View source">查看源码</span>
+        </a>
+      </div>
+      <p class="badge" data-zh="单文件 · 免安装 · Windows 原生 API · MIT License" data-en="Single file · Portable · Native Win32 · MIT License">单文件 · 免安装 · Windows 原生 API · MIT License</p>
     </div>
-    <p class="badge">单文件 · 免安装 · Windows 原生 API · MIT License</p>
-  </div>
-</header>
+  </section>
 
-<section>
-  <div class="wrap">
-    <h2>功能特性</h2>
-    <p class="sec-sub">Features</p>
-    <div class="grid">
-      <div class="card">
-        <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9L12 3l5 6"/><path d="M12 3v14"/><path d="M7 21l5-4 5 4"/></svg></div>
-        <h3>四档步长移动<span class="en">4-step movement</span></h3>
-        <p>Alt 系组合键 + 方向键，四档步长可调，按住连续移动，避开系统与输入法冲突。</p>
-      </div>
-      <div class="card">
-        <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 7-6.5 2L10 19z"/></svg></div>
-        <h3>三键模拟点击<span class="en">Simulated clicks</span></h3>
-        <p>Ctrl+Alt+1 / 2 / 3 一键模拟左键、中键、右键点击，全走 SendInput。</p>
-      </div>
-      <div class="card">
-        <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></div>
-        <h3>连点器<span class="en">Auto-clicker</span></h3>
-        <p>次数、间隔、键位全可设，Ctrl+Alt+4 一键启停，间隔 0 极速模式。</p>
-      </div>
-      <div class="card">
-        <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v14h16"/><path d="M4 13l5-5 4 4 6-7"/></svg></div>
-        <h3>坐标与定点移动<span class="en">Coordinates &amp; jump</span></h3>
-        <p>鼠标坐标实时显示，输入坐标一键跳转，取当前坐标快速填入。</p>
-      </div>
-      <div class="card">
-        <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l4-4 5 5 5-5 4 4v5H3z"/></svg></div>
-        <h3>托盘常驻<span class="en">Tray-resident</span></h3>
-        <p>关窗口收进托盘，Ctrl+M 随时呼出，单实例运行不重复。</p>
-      </div>
-      <div class="card">
-        <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10"/><circle cx="17" cy="6" r="2"/><path d="M4 12h4"/><circle cx="11" cy="12" r="2"/><path d="M4 18h10"/><circle cx="17" cy="18" r="2"/></svg></div>
-        <h3>设置持久化<span class="en">Settings persisted</span></h3>
-        <p>步长、连点器参数自动保存，重启不丢，轻量 JSON 存储。</p>
+  <!-- ===== 功能特性 ===== -->
+  <section>
+    <div class="wrap">
+      <h2 data-zh="功能特性" data-en="Features">功能特性</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9L12 3l5 6"/><path d="M12 3v14"/><path d="M7 21l5-4 5 4"/></svg></div>
+          <h3 data-zh="四档步长移动" data-en="4-step movement">四档步长移动</h3>
+          <p data-zh="Alt 系组合键 + 方向键，四档步长可调，按住连续移动，避开系统与输入法冲突。" data-en="Alt-based combos with arrow keys, four adjustable steps, hold to move continuously. Chosen to avoid system and IME conflicts.">Alt 系组合键 + 方向键，四档步长可调，按住连续移动，避开系统与输入法冲突。</p>
+        </div>
+        <div class="card">
+          <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 7-6.5 2L10 19z"/></svg></div>
+          <h3 data-zh="三键模拟点击" data-en="Simulated clicks">三键模拟点击</h3>
+          <p data-zh="Ctrl+Alt+1 / 2 / 3 一键模拟左键、中键、右键点击，全部走 SendInput。" data-en="Ctrl+Alt+1 / 2 / 3 simulate left, middle and right clicks, all through SendInput.">Ctrl+Alt+1 / 2 / 3 一键模拟左键、中键、右键点击，全部走 SendInput。</p>
+        </div>
+        <div class="card">
+          <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <h3 data-zh="连点器" data-en="Auto-clicker">连点器</h3>
+          <p data-zh="次数、间隔、键位全可设，Ctrl+Alt+4 一键启停，间隔 0 为极速模式。" data-en="Configurable count, interval and button. Toggle with Ctrl+Alt+4; interval 0 for maximum speed.">次数、间隔、键位全可设，Ctrl+Alt+4 一键启停，间隔 0 为极速模式。</p>
+        </div>
+        <div class="card">
+          <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v14h16"/><path d="M4 13l5-5 4 4 6-7"/></svg></div>
+          <h3 data-zh="坐标与定点移动" data-en="Coordinates &amp; jump">坐标与定点移动</h3>
+          <p data-zh="鼠标坐标实时显示，输入坐标一键跳转，也可取当前坐标快速填入。" data-en="Live cursor coordinates, jump to any position, or capture the current one with one click.">鼠标坐标实时显示，输入坐标一键跳转，也可取当前坐标快速填入。</p>
+        </div>
+        <div class="card">
+          <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l4-4 5 5 5-5 4 4v5H3z"/></svg></div>
+          <h3 data-zh="托盘常驻" data-en="Tray-resident">托盘常驻</h3>
+          <p data-zh="关闭窗口收进托盘，Ctrl+M 随时呼出，单实例运行不重复。" data-en="Closing hides it to the tray. Summon anytime with Ctrl+M, single instance only.">关闭窗口收进托盘，Ctrl+M 随时呼出，单实例运行不重复。</p>
+        </div>
+        <div class="card">
+          <div class="icon-chip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10"/><circle cx="17" cy="6" r="2"/><path d="M4 12h4"/><circle cx="11" cy="12" r="2"/><path d="M4 18h10"/><circle cx="17" cy="18" r="2"/></svg></div>
+          <h3 data-zh="设置持久化" data-en="Settings persisted">设置持久化</h3>
+          <p data-zh="步长、连点器参数自动保存，重启不丢，轻量 JSON 存储。" data-en="Step sizes and clicker settings are saved automatically in a lightweight JSON file.">步长、连点器参数自动保存，重启不丢，轻量 JSON 存储。</p>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section>
-  <div class="wrap">
-    <h2>快捷键</h2>
-    <p class="sec-sub">Hotkeys</p>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>功能</th><th>快捷键</th><th class="th-hide">功能</th><th class="th-hide">快捷键</th></tr></thead>
-        <tbody>
-          <tr><td>大幅移动</td><td><code>Alt+方向键</code></td><td class="th-hide">左键点击</td><td class="th-hide"><code>Ctrl+Alt+1</code></td></tr>
-          <tr><td>中幅移动</td><td><code>Shift+Alt+方向键</code></td><td class="th-hide">中键点击</td><td class="th-hide"><code>Ctrl+Alt+2</code></td></tr>
-          <tr><td>小幅移动</td><td><code>Ctrl+Alt+方向键</code></td><td class="th-hide">右键点击</td><td class="th-hide"><code>Ctrl+Alt+3</code></td></tr>
-          <tr><td>微小移动</td><td><code>Ctrl+Shift+Alt+方向键</code></td><td class="th-hide">连点器启停</td><td class="th-hide"><code>Ctrl+Alt+4</code></td></tr>
-          <tr><td>呼出主界面</td><td><code>Ctrl+M</code></td><td class="th-hide">退出程序</td><td class="th-hide"><code>Ctrl+Alt+Q</code></td></tr>
-        </tbody>
-      </table>
+  <!-- ===== 快捷键 ===== -->
+  <section>
+    <div class="wrap">
+      <h2 data-zh="快捷键" data-en="Hotkeys">快捷键</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-zh="功能" data-en="Action">功能</th>
+              <th data-zh="快捷键" data-en="Hotkey">快捷键</th>
+              <th class="th-hide" data-zh="功能" data-en="Action">功能</th>
+              <th class="th-hide" data-zh="快捷键" data-en="Hotkey">快捷键</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-zh="大幅移动" data-en="Large move">大幅移动</td>
+              <td><code data-zh="Alt+方向键" data-en="Alt+Arrows">Alt+方向键</code></td>
+              <td class="th-hide" data-zh="左键点击" data-en="Left click">左键点击</td>
+              <td class="th-hide"><code>Ctrl+Alt+1</code></td>
+            </tr>
+            <tr>
+              <td data-zh="中幅移动" data-en="Medium move">中幅移动</td>
+              <td><code data-zh="Shift+Alt+方向键" data-en="Shift+Alt+Arrows">Shift+Alt+方向键</code></td>
+              <td class="th-hide" data-zh="中键点击" data-en="Middle click">中键点击</td>
+              <td class="th-hide"><code>Ctrl+Alt+2</code></td>
+            </tr>
+            <tr>
+              <td data-zh="小幅移动" data-en="Small move">小幅移动</td>
+              <td><code data-zh="Ctrl+Alt+方向键" data-en="Ctrl+Alt+Arrows">Ctrl+Alt+方向键</code></td>
+              <td class="th-hide" data-zh="右键点击" data-en="Right click">右键点击</td>
+              <td class="th-hide"><code>Ctrl+Alt+3</code></td>
+            </tr>
+            <tr>
+              <td data-zh="微小移动" data-en="Micro move">微小移动</td>
+              <td><code data-zh="Ctrl+Shift+Alt+方向键" data-en="Ctrl+Shift+Alt+Arrows">Ctrl+Shift+Alt+方向键</code></td>
+              <td class="th-hide" data-zh="连点器启停" data-en="Clicker toggle">连点器启停</td>
+              <td class="th-hide"><code>Ctrl+Alt+4</code></td>
+            </tr>
+            <tr>
+              <td data-zh="呼出主界面" data-en="Show window">呼出主界面</td>
+              <td><code>Ctrl+M</code></td>
+              <td class="th-hide" data-zh="退出程序" data-en="Quit">退出程序</td>
+              <td class="th-hide"><code>Ctrl+Alt+Q</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section>
-  <div class="wrap">
-    <h2>下载</h2>
-    <p class="sec-sub">Downloads</p>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>文件</th><th>适用环境</th><th>大小</th></tr></thead>
-        <tbody>
-          <tr><td>MouseController-pe-x64.exe</td><td>64 位 PE / 无运行时（自包含）</td><td class="size">~46 MB</td></tr>
-          <tr><td>MouseController-pe-x86.exe</td><td>32 位 PE / 无运行时（自包含）</td><td class="size">~42 MB</td></tr>
-          <tr><td>MouseController-x64.exe</td><td>64 位 Windows（需 .NET 9 运行时）</td><td class="size">~172 KB</td></tr>
-          <tr><td>MouseController-x86.exe</td><td>32 位 Windows（需 .NET 9 运行时）</td><td class="size">~145 KB</td></tr>
-        </tbody>
-      </table>
+  <!-- ===== 下载 ===== -->
+  <section>
+    <div class="wrap">
+      <h2 data-zh="下载" data-en="Downloads">下载</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-zh="文件" data-en="File">文件</th>
+              <th data-zh="适用环境" data-en="Environment">适用环境</th>
+              <th data-zh="大小" data-en="Size">大小</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>MouseController-pe-x64.exe</code></td><td data-zh="64 位 PE / 无运行时（自包含）" data-en="64-bit WinPE / no runtime (self-contained)">64 位 PE / 无运行时（自包含）</td><td class="size">~46 MB</td></tr>
+            <tr><td><code>MouseController-pe-x86.exe</code></td><td data-zh="32 位 PE / 无运行时（自包含）" data-en="32-bit WinPE / no runtime (self-contained)">32 位 PE / 无运行时（自包含）</td><td class="size">~42 MB</td></tr>
+            <tr><td><code>MouseController-x64.exe</code></td><td data-zh="64 位 Windows（需 .NET 9 运行时）" data-en="64-bit Windows (needs .NET 9 runtime)">64 位 Windows（需 .NET 9 运行时）</td><td class="size">~172 KB</td></tr>
+            <tr><td><code>MouseController-x86.exe</code></td><td data-zh="32 位 Windows（需 .NET 9 运行时）" data-en="32-bit Windows (needs .NET 9 runtime)">32 位 Windows（需 .NET 9 运行时）</td><td class="size">~145 KB</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
+</main>
 
 <footer>
   <div class="wrap">
-    <p>MouseController · Built with .NET 9 + WinForms · <a href="https://github.com/ChuxueTeam/MouseController/blob/main/LICENSE">MIT License</a> · © 2026 ChuxueTeam</p>
+    <div class="foot-grid">
+      <div>
+        <div class="foot-brand">
+          <span class="brand-mark">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="18" rx="4"/><path d="M12 3v4"/></svg>
+          </span>
+          <span class="brand-name">MouseController</span>
+        </div>
+        <p class="foot-note" data-zh="键盘驱动的 Windows 鼠标控制与连点器，基于 .NET 9 + WinForms，全部走原生 API。" data-en="A keyboard-driven mouse controller and auto-clicker for Windows, built on .NET 9 + WinForms with native APIs.">键盘驱动的 Windows 鼠标控制与连点器，基于 .NET 9 + WinForms，全部走原生 API。</p>
+      </div>
+      <div class="foot-col">
+        <h4 data-zh="项目" data-en="Project">项目</h4>
+        <a href="https://github.com/ChuxueTeam/MouseController" data-zh="源码仓库" data-en="Repository">源码仓库</a>
+        <a href="https://github.com/ChuxueTeam/MouseController/releases" data-zh="版本下载" data-en="Releases">版本下载</a>
+        <a href="https://github.com/ChuxueTeam/MouseController/issues" data-zh="问题反馈" data-en="Issues">问题反馈</a>
+      </div>
+      <div class="foot-col">
+        <h4 data-zh="关于" data-en="About">关于</h4>
+        <a href="https://github.com/ChuxueTeam/MouseController/blob/main/LICENSE" data-zh="MIT 许可证" data-en="MIT License">MIT 许可证</a>
+        <a href="https://github.com/ChuxueTeam/MouseController#构建" data-zh="构建说明" data-en="Build guide">构建说明</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 ChuxueTeam · MouseController</span>
+      <span data-zh="单文件 · 免安装 · 无第三方依赖" data-en="Single file · Portable · No third-party dependencies">单文件 · 免安装 · 无第三方依赖</span>
+    </div>
   </div>
 </footer>
 
+<script>
+(function () {
+  var LANG_KEY = 'mc-lang';
+  var lang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'zh';
+  var langBtn = document.getElementById('langBtn');
+
+  function applyLang(next) {
+    lang = next;
+    localStorage.setItem(LANG_KEY, lang);
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    document.title = lang === 'zh'
+      ? 'MouseController · 鼠标控制与连点器'
+      : 'MouseController · Mouse control & auto-clicker';
+    var els = document.querySelectorAll('[data-zh][data-en]');
+    for (var i = 0; i < els.length; i++) {
+      var e = els[i];
+      e.textContent = lang === 'zh' ? e.getAttribute('data-zh') : e.getAttribute('data-en');
+    }
+    langBtn.textContent = lang === 'zh' ? '中文' : 'EN';
+  }
+
+  langBtn.addEventListener('click', function () {
+    applyLang(lang === 'zh' ? 'en' : 'zh');
+  });
+
+  // 滚动状态：胶囊出现并缩短
+  function updateNav() {
+    document.body.classList.toggle('scrolled', window.scrollY > 60);
+  }
+  window.addEventListener('scroll', updateNav, { passive: true });
+  updateNav();
+
+  applyLang(lang);
+})();
+</script>
 </body>
 </html>
