@@ -160,7 +160,46 @@
     display: flex; align-items: center; justify-content: center;
     color: #fff; box-shadow: 0 10px 26px rgba(27,95,224,.28);
   }
-  h1 { font-size: 52px; font-weight: 700; letter-spacing: -1px; line-height: 1.1; }
+  h1 {
+    font-size: 52px; font-weight: 700; line-height: 1.15;
+    letter-spacing: .14em;      /* 字间距拉大 */
+    display: inline-block;
+    position: relative;
+    padding: 6px 10px;
+  }
+  .title-text { position: relative; z-index: 1; }
+  /* 鼠标悬停时跟随光标的暗色光斑 */
+  .cursor-blob {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 152px; height: 152px;
+    margin: -76px 0 0 -76px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(12,20,40,.62) 0%, rgba(12,20,40,.36) 46%, rgba(12,20,40,0) 72%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 2;
+    transition: left .12s ease-out, top .12s ease-out, opacity .3s ease;
+  }
+  h1:hover .cursor-blob { opacity: 1; }
+
+  /* 入场浮动动画 */
+  @keyframes floatIn {
+    from { opacity: 0; transform: translateY(22px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .announce, .app-icon, h1, .tagline, .cta, .badge {
+    animation: floatIn .78s cubic-bezier(.16,.84,.28,1) both;
+  }
+  .announce { animation-delay: .05s; }
+  .app-icon { animation-delay: .12s; }
+  h1 { animation-delay: .2s; }
+  .tagline { animation-delay: .3s; }
+  .cta { animation-delay: .38s; }
+  .badge { animation-delay: .46s; }
+  @media (prefers-reduced-motion: reduce) {
+    .announce, .app-icon, h1, .tagline, .cta, .badge { animation: none; }
+  }
   .tagline { font-size: 19px; color: var(--on-surface-variant); margin-top: 16px; }
 
   .cta { margin-top: 34px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
@@ -268,7 +307,7 @@
           <rect x="8" y="3" width="8" height="18" rx="4"/><path d="M12 3v4"/>
         </svg>
       </div>
-      <h1>MouseController</h1>
+      <h1 id="heroTitle"><span class="title-text">MouseController</span><span class="cursor-blob" id="heroBlob" aria-hidden="true"></span></h1>
       <p class="tagline" data-zh="键盘驱动的全局鼠标控制与连点器" data-en="Keyboard-driven mouse control &amp; auto-clicker">键盘驱动的全局鼠标控制与连点器</p>
       <div class="cta">
         <a class="btn btn-filled" href="https://github.com/ChuxueTeam/MouseController/releases/latest">
@@ -474,6 +513,21 @@
   }
   window.addEventListener('scroll', updateNav, { passive: true });
   updateNav();
+
+  // 标题悬停：暗色光斑跟随光标
+  var titleEl = document.getElementById('heroTitle');
+  var blobEl = document.getElementById('heroBlob');
+  if (titleEl && blobEl) {
+    titleEl.addEventListener('mousemove', function (e) {
+      var r = titleEl.getBoundingClientRect();
+      blobEl.style.left = (e.clientX - r.left) + 'px';
+      blobEl.style.top = (e.clientY - r.top) + 'px';
+    });
+    titleEl.addEventListener('mouseleave', function () {
+      blobEl.style.left = '50%';
+      blobEl.style.top = '50%';
+    });
+  }
 
   applyLang(lang);
 })();
