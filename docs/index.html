@@ -151,7 +151,7 @@
   }
   .announce:hover { color: var(--primary); }
   .announce b { color: var(--primary); font-weight: 600; }
-  .confetti { flex: none; transition: transform .28s cubic-bezier(.2,0,0,1); }
+  .confetti { flex: none; font-size: 17px; line-height: 1; display: inline-block; transition: transform .28s cubic-bezier(.2,0,0,1); }
   .announce:hover .confetti { transform: scale(1.18) rotate(-8deg); }
 
   .app-icon {
@@ -211,14 +211,14 @@
   .size { white-space: nowrap; color: var(--on-surface-variant); }
 
   /* ========== Footer ========== */
-  footer { padding: 56px 0 44px; margin-top: 24px; border-top: 1px solid var(--outline-variant); }
-  .foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 28px; }
-  .foot-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .foot-note { font-size: 13px; color: var(--on-surface-variant); }
-  .foot-col h4 { font-size: 13px; font-weight: 700; margin-bottom: 12px; }
-  .foot-col a { display: block; font-size: 13.5px; color: var(--on-surface-variant); text-decoration: none; padding: 4px 0; }
+  footer { padding: 72px 0 56px; margin-top: 32px; border-top: 1px solid var(--outline-variant); }
+  .foot-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 52px 48px; }
+  .foot-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .foot-note { font-size: 13px; color: var(--on-surface-variant); max-width: 300px; }
+  .foot-col h4 { font-size: 13px; font-weight: 700; margin-bottom: 18px; }
+  .foot-col a { display: block; font-size: 13.5px; color: var(--on-surface-variant); text-decoration: none; padding: 7px 0; }
   .foot-col a:hover { color: var(--primary); }
-  .foot-bottom { margin-top: 32px; font-size: 12.5px; color: var(--on-surface-variant); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .foot-bottom { margin-top: 48px; font-size: 12.5px; color: var(--on-surface-variant); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .foot-bottom a { color: var(--primary); text-decoration: none; }
 
   @media (max-width: 680px) {
@@ -260,18 +260,7 @@
   <section class="hero">
     <div class="wrap">
       <a class="announce" href="https://github.com/ChuxueTeam/MouseController/releases/latest">
-        <svg class="confetti" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M9.1 20.9l4.7-6.2-2.5-.9-3.4 5.5 1.2 1.6z" fill="#f4a63a"/>
-          <path d="M9.1 20.9l4.7-6.2-1.2-.4-4.1 5.2.6 1.4z" fill="#ffcf5c"/>
-          <path d="M13.4 13.4c-.9-2.6-2.7-4.6-5.1-5.8" stroke="#ff4d8d" stroke-width="1.7" stroke-linecap="round"/>
-          <path d="M13.9 13.1c.3-2.6 1.7-5 3.8-6.6" stroke="#2f8cff" stroke-width="1.7" stroke-linecap="round"/>
-          <path d="M13.6 12.9c1.7-1.4 3.9-2 6-1.8" stroke="#ffc93c" stroke-width="1.7" stroke-linecap="round"/>
-          <circle cx="6.2" cy="5.2" r="1.25" fill="#ff4d8d"/>
-          <circle cx="19.4" cy="5.6" r="1.15" fill="#2f8cff"/>
-          <circle cx="14.4" cy="3.4" r="1.05" fill="#ffc93c"/>
-          <circle cx="20.4" cy="11.8" r="1" fill="#ff8a3d"/>
-          <circle cx="10.2" cy="3.2" r="0.95" fill="#ff8a3d"/>
-        </svg>
+        <span class="confetti" aria-hidden="true">🎉</span>
         <span data-zh="v1.0.0 已发布 · 支持 PE 免依赖运行" data-en="v1.0.0 released · runs on WinPE, no dependencies">v1.0.0 已发布 · 支持 PE 免依赖运行</span> →
       </a>
       <div class="app-icon">
